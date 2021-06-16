@@ -1277,6 +1277,11 @@ describe('session()', function(){
 
           // expect the signature to be based on cookie_name=cookie_value, 
           // see Cookie.toString() at https://github.com/pillarjs/cookies/blob/master/lib/cookies.js#L145
+          console.log("signingKeys:"+signingKeys);
+          console.log("sessCookie:" + sessCookie.join("="));
+          console.log("sigCookie:" + sigCookie.join("="));
+          console.log("sigCookie[1]:" + sigCookie[1]);
+          console.log("computed signature:" + keyHandler.verify(sessCookie.join("="), sigCookie[1]));
           assert.ok(keyHandler.verify(sessCookie.join("="), sigCookie[1]), "should match the signature");
 
           done();
@@ -1286,7 +1291,105 @@ describe('session()', function(){
       it('should read cookies using all elements', function (done) {
         var store = new session.MemoryStore();
 
-        var server1 = createServer({ secret: 'nyan cat', store: store }, function (req, res) {
+        var signingKeys1 = ['abcd,1234'];
+        var keyHandler1 = new Keygrip(signingKeys1);
+        var server1 = createServer({ secret: "abcd,1234", store: store }, function (req, res) {
+          req.session.user = 'bob';
+          res.end(req.session.user);
+        });
+
+        var signingKeys2 = ['abcd', '1234'];
+        var keyHandler2 = new Keygrip(signingKeys2);
+        var server2 = createServer({ secret: signingKeys2, store: store }, function (req, res) {
+          res.end(String(req.session.user));
+        });
+
+        var cookieName = 'connect.sid';
+
+        request(server1)
+        .get('/')
+        .expect(shouldSetCookie('connect.sid'))
+        .expect(200, 'bob', function (err, res) {
+          var cookies = res.header["set-cookie"];
+          assert.ok(cookies, "cookies should be set");
+          assert.ok(Array.isArray(cookies), "cookies should be an array");
+          assert.equal(cookies.length, 2, "should have set 2 cookies");
+
+          var sessCookie = cookies[0].split(";")[0].split("=");
+          var sigCookie = cookies[1].split(";")[0].split("=");
+
+          assert.equal(sessCookie[0], cookieName, "name should be our cookie name");
+          assert.equal(sigCookie[0], cookieName+".sig", "sig cookie name should be name + '.sig'");
+
+          // expect the signature to be based on cookie_name=cookie_value, 
+          // see Cookie.toString() at https://github.com/pillarjs/cookies/blob/master/lib/cookies.js#L145
+          console.log("signingKeys:"+signingKeys1);
+          console.log("sessCookie:" + sessCookie.join("="));
+          console.log("sigCookie:" + sigCookie.join("="));
+          console.log("sigCookie[1]:" + sigCookie[1]);
+          console.log("computed signature:" + keyHandler1.verify(sessCookie.join("="), sigCookie[1]));
+          assert.ok(keyHandler1.verify(sessCookie.join("="), sigCookie[1]), "should match the signature");
+
+          // store away the signature from the first cookie
+          var oldSigCookie = sigCookie;
+
+          if (err) return done(err);
+          request(server2)
+          .get('/')
+          .set('Cookie', cookie(res))
+          .expect(200, 'bob', done);
+
+          // compare new signature against old cookie
+          var cookies = res.header["set-cookie"];
+          assert.ok(cookies, "cookies should be set");
+          assert.ok(Array.isArray(cookies), "cookies should be an array");
+          assert.equal(cookies.length, 2, "should have set 2 cookies");
+
+          var sessCookie = cookies[0].split(";")[0].split("=");
+          var sigCookie = cookies[1].split(";")[0].split("=");
+
+          assert.equal(sessCookie[0], cookieName, "name should be our cookie name");
+          assert.equal(sigCookie[0], cookieName+".sig", "sig cookie name should be name + '.sig'");
+
+          // expect the signature to be based on cookie_name=cookie_value, 
+          // see Cookie.toString() at https://github.com/pillarjs/cookies/blob/master/lib/cookies.js#L145
+          console.log("signingKeys:"+signingKeys2);
+          console.log("sessCookie:" + sessCookie.join("="));
+          console.log("sigCookie:" + sigCookie.join("="));
+          console.log("sigCookie[1]:" + sigCookie[1]);
+          console.log("computed signature:" + keyHandler2.verify(sessCookie.join("="), oldSigCookie[1]));
+          assert.ok(keyHandler2.verify(sessCookie.join("="), oldSigCookie[1]), "should match the signature");
+        });
+      });
+
+      it('SHOULD BE BROKEN - should read cookies using all elements', function (done) {
+        var store = new session.MemoryStore();
+
+        var server1 = createServer({ secret: 'dog', store: store }, function (req, res) {
+          req.session.user = 'bob';
+          res.end(req.session.user);
+        });
+
+        var server2 = createServer({ secret: ['one cat', 'two cat'], store: store }, function (req, res) {
+          res.end(String(req.session.user));
+        });
+
+        request(server1)
+        .get('/')
+        .expect(shouldSetCookie('connect.sid'))
+        .expect(200, 'bob', function (err, res) {
+          if (err) return done(err);
+          request(server2)
+          .get('/')
+          .set('Cookie', cookie(res))
+          .expect(200, 'bob', done);
+        });
+      });
+
+      it('should read cookies using array if string is supplied to encrypt', function (done) {
+        var store = new session.MemoryStore();
+
+        var server1 = createServer({ secret: 'keyboard cat,nyan cat', store: store }, function (req, res) {
           req.session.user = 'bob';
           res.end(req.session.user);
         });
@@ -1306,6 +1409,56 @@ describe('session()', function(){
           .expect(200, 'bob', done);
         });
       });
+
+      it('should read cookies using string if array is supplied to encrypt', function (done) {
+        var store = new session.MemoryStore();
+
+        var server1 = createServer({ secret: ['keyboard cat', 'nyan cat'], store: store }, function (req, res) {
+          req.session.user = 'bob';
+          res.end(req.session.user);
+        });
+
+        var server2 = createServer({ secret: 'keyboard cat,nyan cat', store: store }, function (req, res) {
+          res.end(String(req.session.user));
+        });
+
+        request(server1)
+        .get('/')
+        .expect(shouldSetCookie('connect.sid'))
+        .expect(200, 'bob', function (err, res) {
+          if (err) return done(err);
+          request(server2)
+          .get('/')
+          .set('Cookie', cookie(res))
+          .expect(200, 'bob', done);
+        });
+      });
+
+      // TODO figure out why this passes because it should not
+      it('should not read cookies using string if array is supplied does not match', function (done) {
+        var store = new session.MemoryStore();
+
+        var server1 = createServer({ secret: ['foo', 'bar'], store: store }, function (req, res) {
+          req.session.user = 'bob';
+          res.end(req.session.user);
+        });
+
+        var server2 = createServer({ secret: 'keyboard cat,nyan cat', store: store }, function (req, res) {
+          res.end(String(req.session.user));
+        });
+
+        request(server1)
+        .get('/')
+        .expect(shouldSetCookie('connect.sid'))
+        .expect(200, 'bob', function (err, res) {
+          if (err) return done(err);
+          request(server2)
+          .get('/')
+          .set('Cookie', cookie(res))
+          .expect(200, 'bob', done);
+        });
+      });
+
     })
   });
 
