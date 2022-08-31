@@ -416,7 +416,8 @@ describe('session()', function(){
           store.get(id, function (err, sess) {
             if (err) return done(err)
             assert.ok(sess, 'session saved to store')
-            var exp = new Date(sess.cookie.expires)
+            var sessionCookie = new Cookie(sess.cookie);
+            var exp = new Date(sessionCookie.expires)
             assert.equal(exp.toUTCString(), expires(res))
             setTimeout(function () {
               request(server)
@@ -426,9 +427,10 @@ describe('session()', function(){
                 if (err) return done(err)
                 store.get(id, function (err, sess) {
                   if (err) return done(err)
+                  var sessonCookie = new Cookie(sess.cookie);
                   assert.equal(res.text, id)
                   assert.ok(sess, 'session still in store')
-                  assert.notEqual(new Date(sess.cookie.expires).toUTCString(), exp.toUTCString(), 'session cookie expiration updated')
+                  assert.notEqual(new Date(sessonCookie.expires).toUTCString(), exp.toUTCString(), 'session cookie expiration updated')
                   done()
                 })
               })
@@ -1810,7 +1812,8 @@ describe('session()', function(){
         var id = sid(res)
         store.get(id, function (err, sess) {
           if (err) return done(err)
-          var exp = new Date(sess.cookie.expires)
+          var sessionCookie = new Cookie(sess.cookie);
+          var exp = new Date(sessionCookie.expires)
           setTimeout(function () {
             request(server)
             .get('/')
@@ -1819,7 +1822,8 @@ describe('session()', function(){
               if (err) return done(err);
               store.get(id, function (err, sess) {
                 if (err) return done(err)
-                assert.notEqual(new Date(sess.cookie.expires).getTime(), exp.getTime())
+                var sessionCookie = new Cookie(sess.cookie);
+                assert.notEqual(new Date(sessionCookie.expires).getTime(), exp.getTime())
                 done()
               })
             })

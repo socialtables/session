@@ -15,6 +15,7 @@
 
 var Store = require('./store')
 var util = require('util')
+var Cookie = require('./cookie')
 
 /**
  * Shim setImmediate for node.js < 0.10
@@ -171,9 +172,12 @@ function getSession(sessionId) {
   // parse
   sess = JSON.parse(sess)
 
-  var expires = typeof sess.cookie.expires === 'string'
-    ? new Date(sess.cookie.expires)
-    : sess.cookie.expires
+  //use the session/cookie object that has a getter for expires
+  var sessCookie = new Cookie(sess.cookie)
+
+  var expires = typeof sessCookie.expires === 'string'
+    ? new Date(sessCookie.expires)
+    : sessCookie.expires
 
   // destroy expired session
   if (expires && expires <= Date.now()) {
