@@ -1,0 +1,48 @@
+# JavaScript Node CircleCI 2.1 configuration file
+#
+# Check https://circleci.com/docs/2.1/language-javascript/ for more details
+#
+version: 2.1
+executors:
+  linux:
+    docker:
+      - image: cimg/base:2020.01
+        environment:
+          ENV: development
+
+  macos:
+    macos:
+      xcode: '13.2.1'
+    environment:
+        ENV: development
+
+orbs:
+  node: circleci/node@4.7.0
+
+jobs:
+  test:
+    parameters:
+      os:
+        type: executor
+      node-version:
+        type: string
+    executor: << parameters.os >>
+    steps:
+      - checkout
+      - node/install:
+          node-version: << parameters.node-version >>
+          npm-version: 6.14.14
+      - node/install-packages
+      - run:
+          command: npm run test
+
+workflows:
+  version: 2
+  matrix-tests:
+    jobs:
+      - test:
+          context: st-global
+          matrix:
+            parameters:
+              os: [linux, macos]
+              node-version: ['14.19.1']
