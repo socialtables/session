@@ -97,7 +97,10 @@ Cookie.prototype = {
   get data() {
     return {
         maxAge: this.originalMaxAge // what we want serialized in the session obj is called maxAge
-      , expires: this._expires
+      // having `expires` in the session breaks koa-generic-session, since it uses expires before maxAge. 
+      // see https://github.com/koajs/generic-session/blob/ffe3357069c642cfafab5610713563b10b725323/src/store.js#L56-L65
+      // SocialTables
+      , _expires: this._expires
       , secure: this.secure
       , httpOnly: this.httpOnly
       , domain: this.domain
