@@ -14,10 +14,34 @@ executors:
     macos:
       xcode: '13.2.1'
     environment:
-        ENV: development
+      ENV: development
 
 orbs:
   node: circleci/node@4.7.0
+  sre: socialtables/sre-docker@5
+
+job-filters:
+  all-commits: &all-commits
+    branches:
+      only: /.*/
+    tags:
+      only:
+        - /^v.*/
+  version-tags-only: &version-tags-only
+    branches:
+      ignore: /.*/
+    tags:
+      only: /^v.*/
+  main-branch-only: &main-branch-only
+    branches:
+      only:
+        - main
+  pr-branches-only: &pr-branches-only
+    branches:
+      ignore:
+        - main
+    tags:
+      ignore: /.*/
 
 jobs:
   test:
