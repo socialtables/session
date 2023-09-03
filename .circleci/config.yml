@@ -69,4 +69,4 @@ workflows:
           matrix:
             parameters:
               os: [linux, macos]
-              node-version: ['14.19.1']
+              node-version: ['14.19.1', 'v18.16.0']
