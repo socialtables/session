@@ -55,7 +55,7 @@ jobs:
       - checkout
       - node/install:
           node-version: << parameters.node-version >>
-          npm-version: 6.14.14
+          #npm-version: 6.14.14
       - node/install-packages:
           override-ci-command: npm install
       - run:
