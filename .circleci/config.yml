@@ -5,8 +5,8 @@ version: 2.1
 executors:
   linux:
     docker:
-      - image: cimg/base:2020.01
-        environment:
+      - image: cimg/base:2023.06
+        environment: 
           ENV: development
 
   macos:
