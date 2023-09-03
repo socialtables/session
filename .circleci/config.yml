@@ -12,7 +12,7 @@ executors:
   macos:
     macos:
       xcode: "14.3.1"
-      resource_class: macos.m1.medium.gen1
+      resource_class: macos.x86.medium.gen2 ##macos.m1.medium.gen1
     environment:
       ENV: development
 
@@ -55,27 +55,10 @@ jobs:
       - checkout
       - node/install:
           node-version: << parameters.node-version >>
-          #npm-version: 6.14.14
       - node/install-packages:
           override-ci-command: npm install
       - run:
           command: npm run test
-
-  # - st/release: 
-  #       name: canary-release
-  #     context: st-global
-  #     disable-gh-release: true
-  #     snapshot: true
-  #     requires: 
-  #         - build
-  #     filters: *pr-branches-only
-
-  # - st/release: 
-  #       name: release
-  #     context: st-global
-  #     requires: 
-  #         - build
-  #     filters: *main-branch-only
 
 
 workflows:
@@ -85,5 +68,22 @@ workflows:
           context: st-global
           matrix:
             parameters:
-              os: [linux, macos]
+              os: [linux]
               node-version: ['14.19.1', 'v18.16.0']
+          filters: *all-commits
+      # uncomment for canary releases
+      # - st/release: 
+      #     name: canary-release
+      #     context: st-global
+      #     disable-gh-release: true
+      #     snapshot: true
+      #     requires: 
+      #         - test
+      #     filters: *pr-branches-only
+      - st/release: 
+          name: release
+          context: st-global
+          requires: 
+              - test
+          filters: *main-branch-only
+
