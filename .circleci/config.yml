@@ -16,7 +16,7 @@ executors:
       ENV: development
 
 orbs:
-  node: circleci/node@4.7.0
+  node: circleci/node@4.9.0
   sre: socialtables/sre-docker@5
 
 job-filters:
