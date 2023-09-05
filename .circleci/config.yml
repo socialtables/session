@@ -71,15 +71,14 @@ workflows:
               os: [linux]
               node-version: ['14.19.1', 'v18.16.0']
           filters: *all-commits
-      # uncomment for canary releases
-      # - st/release: 
-      #     name: canary-release
-      #     context: st-global
-      #     disable-gh-release: true
-      #     snapshot: true
-      #     requires: 
-      #         - test
-      #     filters: *pr-branches-only
+      - st/release: 
+          name: canary-release
+          context: st-global
+          disable-gh-release: true
+          snapshot: true
+          requires: 
+              - test
+          filters: *pr-branches-only
       - st/release: 
           name: release
           context: st-global
