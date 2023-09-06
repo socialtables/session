@@ -44,6 +44,11 @@ job-filters:
       ignore: /.*/
 
 jobs:
+  get-latest:
+      docker:
+        - image: cimg/node:18.12.1
+      steps:
+        - checkout
   test:
     parameters:
       os:
@@ -78,6 +83,7 @@ workflows:
           snapshot: true
           requires: 
               - test
+              - get-latest
           filters: *pr-branches-only
       - st/release: 
           name: release
