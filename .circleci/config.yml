@@ -76,7 +76,8 @@ workflows:
               os: [linux]
               node-version: ['14.19.1', 'v18.16.0']
           filters: *all-commits
-    releases:
+      - get-latest:
+          context: st-global
       - st/release: 
           name: canary-release
           context: st-global
@@ -92,3 +93,4 @@ workflows:
           requires: 
               - test
           filters: *main-branch-only
+
