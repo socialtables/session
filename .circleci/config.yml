@@ -73,11 +73,13 @@ workflows:
           context: st-global
           matrix:
             parameters:
-              os: [linux]
+              os: [linux, macos] #linux, macos
               node-version: ['14.19.1', 'v18.16.0']
           filters: *all-commits
       - get-latest:
           context: st-global
+          requires: 
+              - test
       - st/release: 
           name: canary-release
           context: st-global
