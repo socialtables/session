@@ -91,6 +91,8 @@ workflows:
       - build:
           context: st-global
           filters: *pr-branches-only
+          requires:
+            - test
       - st/release:
           name: release
           context: st-global
