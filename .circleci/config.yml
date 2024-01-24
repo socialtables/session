@@ -2,6 +2,11 @@
 # Check https://circleci.com/docs/2.1/language-javascript/ for more details
 #
 version: 2.1
+
+orbs:
+  node: circleci/node@5.1.0
+  st: socialtables/ci-kit@6
+
 executors:
   linux:
     docker:
@@ -16,9 +21,6 @@ executors:
     environment:
       ENV: development
 
-orbs:
-  node: circleci/node@5.1.0
-  st: socialtables/ci-kit@6
 
 job-filters:
   all-commits: &all-commits
@@ -44,11 +46,6 @@ job-filters:
       ignore: /.*/
 
 jobs:
-  get-latest:
-      docker:
-        - image: cimg/node:18.12.1
-      steps:
-        - checkout
   test:
     parameters:
       os:
@@ -65,6 +62,19 @@ jobs:
       - run:
           command: npm run test
 
+  build:
+    docker:
+      - image: ${CVT_MGT_AWS_ACCOUNT_NUMBER}.dkr.ecr.us-east-1.amazonaws.com/st-docker-circleci-node-18:v6-latest
+        aws_auth:
+          aws_access_key_id: $CVT_MGT_AWS_ACCESS_KEY_ID
+          aws_secret_access_key: $CVT_MGT_AWS_SECRET_ACCESS_KEY
+      - image: cimg/redis:7.0
+    steps:
+      - checkout
+      - st/install-asdf
+      - persist_to_workspace:
+          root: .
+          paths: ['.']
 
 workflows:
   matrix-tests:
@@ -76,23 +86,14 @@ workflows:
               os: [linux, macos] #linux, macos
               node-version: ['14.19.1', 'v18.16.0']
           filters: *all-commits
-      - get-latest:
+  cd-pipeline:
+    jobs:
+      - build:
           context: st-global
-          requires: 
-              - test
-      - st/release: 
-          name: canary-release
-          context: st-global
-          disable-gh-release: true
-          snapshot: true
-          requires: 
-              - test
-              - get-latest
           filters: *pr-branches-only
-      - st/release: 
+      - st/release:
           name: release
           context: st-global
-          requires: 
-              - test
+          requires:
+            - build
           filters: *main-branch-only
-
