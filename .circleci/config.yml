@@ -68,7 +68,6 @@ jobs:
         aws_auth:
           aws_access_key_id: $CVT_MGT_AWS_ACCESS_KEY_ID
           aws_secret_access_key: $CVT_MGT_AWS_SECRET_ACCESS_KEY
-      - image: cimg/redis:7.0
     steps:
       - checkout
       - st/install-asdf
