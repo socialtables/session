@@ -77,7 +77,7 @@ jobs:
           paths: ['.']
 
 workflows:
-  matrix-tests:
+  cd-pipeline:
     jobs:
       - test:
           context: st-global
@@ -86,8 +86,6 @@ workflows:
               os: [linux, macos] #linux, macos
               node-version: ['14.19.1', 'v18.16.0']
           filters: *all-commits
-  cd-pipeline:
-    jobs:
       - build:
           context: st-global
           filters: *pr-branches-only
