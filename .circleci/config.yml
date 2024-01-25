@@ -2,22 +2,25 @@
 # Check https://circleci.com/docs/2.1/language-javascript/ for more details
 #
 version: 2.1
+
+orbs:
+  node: circleci/node@5.1.0
+  st: socialtables/ci-kit@6
+
 executors:
   linux:
     docker:
-      - image: cimg/base:2020.01
-        environment:
+      - image: cimg/base:2023.06
+        environment: 
           ENV: development
 
   macos:
     macos:
-      xcode: '13.2.1'
+      xcode: "14.3.1"
+      resource_class: macos.x86.medium.gen2 ##macos.m1.medium.gen1
     environment:
       ENV: development
 
-orbs:
-  node: circleci/node@4.7.0
-  sre: socialtables/sre-docker@5
 
 job-filters:
   all-commits: &all-commits
@@ -54,19 +57,42 @@ jobs:
       - checkout
       - node/install:
           node-version: << parameters.node-version >>
-          npm-version: 6.14.14
       - node/install-packages:
           override-ci-command: npm install
       - run:
           command: npm run test
 
+  build:
+    docker:
+      - image: ${CVT_MGT_AWS_ACCOUNT_NUMBER}.dkr.ecr.us-east-1.amazonaws.com/st-docker-circleci-node-18:v6-latest
+        aws_auth:
+          aws_access_key_id: $CVT_MGT_AWS_ACCESS_KEY_ID
+          aws_secret_access_key: $CVT_MGT_AWS_SECRET_ACCESS_KEY
+    steps:
+      - checkout
+      - st/install-asdf
+      - persist_to_workspace:
+          root: .
+          paths: ['.']
+
 workflows:
-  version: 2
-  matrix-tests:
+  cd-pipeline:
     jobs:
       - test:
           context: st-global
           matrix:
             parameters:
-              os: [linux, macos]
-              node-version: ['14.19.1']
+              os: [linux, macos] #linux, macos
+              node-version: ['14.19.1', 'v18.16.0']
+          filters: *all-commits
+      - build:
+          context: st-global
+          filters: *pr-branches-only
+          requires:
+            - test
+      - st/release:
+          name: release
+          context: st-global
+          requires:
+            - build
+          filters: *main-branch-only
