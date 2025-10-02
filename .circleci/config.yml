@@ -56,7 +56,7 @@ jobs:
 
   build:
     docker:
-      - image: ${CVT_MGT_AWS_ACCOUNT_NUMBER}.dkr.ecr.us-east-1.amazonaws.com/st-docker-circleci-node-18:v6-latest
+      - image: ${CVT_MGT_AWS_ACCOUNT_NUMBER}.dkr.ecr.us-east-1.amazonaws.com/st-docker-circleci-node-22:v6-latest
         aws_auth:
           aws_access_key_id: $CVT_MGT_AWS_ACCESS_KEY_ID
           aws_secret_access_key: $CVT_MGT_AWS_SECRET_ACCESS_KEY
