@@ -14,14 +14,6 @@ executors:
         environment: 
           ENV: development
 
-  macos:
-    macos:
-      xcode: "14.3.1"
-      resource_class: macos.x86.medium.gen2 ##macos.m1.medium.gen1
-    environment:
-      ENV: development
-
-
 job-filters:
   all-commits: &all-commits
     branches:
@@ -82,8 +74,8 @@ workflows:
           context: st-global
           matrix:
             parameters:
-              os: [linux, macos] #linux, macos
-              node-version: ['14.19.1', 'v18.16.0']
+              os: [linux]
+              node-version: ['22.13.0']
           filters: *all-commits
       - build:
           context: st-global
